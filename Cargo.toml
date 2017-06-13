@@ -1,4 +1,7 @@
 [package]
-name = "rustyVote"
+name = "rusty_vote"
 version = "0.1.0"
 authors = ["Muhd"]
+
+[dependencies]
+arrayfire = "3.4.3"

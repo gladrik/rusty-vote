@@ -11,5 +11,9 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="Rust &lt;rustyVote&gt;" level="project" />
+    <orderEntry type="library" name="Cargo &lt;rustyVote&gt;" level="project" />
+    <orderEntry type="library" name="Rust &lt;rusty_vote&gt;" level="project" />
+    <orderEntry type="library" name="Cargo &lt;rusty_vote&gt;" level="project" />
   </component>
 </module>
