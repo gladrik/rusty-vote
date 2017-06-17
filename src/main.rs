@@ -36,14 +36,28 @@ fn main() {
     // 59659298 5^2 unmemozied,500_000
     // 64700557 5^2 memoized ballots....really?
     // 65490278 5^2 unmemozied,500_000 --release...what?
+    //15011194632
+
+    //222172629 10^2 win_points^2 (not pretab), 500_000 sc
+    // with win_points pretabulated:
+    // 73593116 10 sample,1_000_000 scenarios
+    // 57679105 10 sample,  500_000 scenarios
+    // 46587156 10 sample,  100_000 scenarios
 
     let start = Instant::now();
 
     mem_info!("Before benchmark");
     {
-        let middle_points = vec![0.0, 0.25, 0.5, 0.75, 1.0];
+        let middle_points = (0..11).map(|x| x as f64/10.0).collect::<Vec<_>>(); //vec![0.0, 0.25, 0.5, 0.75, 1.0];
         /* TODO parameter num adversaries */
         let normalized_a1a2 = &get_adversary_ballots_combined(); if LOGLEVEL >= DEBUG {af_print!("a1 + a2 normalized:", normalized_a1a2);}
+
+        // pretabulate and store win_counts for each middle point so we only calc once per each
+        let mut win_counts : Vec<Array> = Vec::new();
+        for i in 0..middle_points.len() {
+            let &middle_point = &middle_points[i];
+            win_counts.push(get_win_count_using_middle(middle_point, normalized_a1a2))
+        }
 
         for i in 0..middle_points.len() {
             for j in 0..middle_points.len() {
@@ -51,21 +65,15 @@ fn main() {
                 let &middle_point = &middle_points[j];
 
                 // protagonist's info
-                let win_count = { // TODO float to wincounts function, memoize it
-                    let my_ballot = &Array::new(&[0.0, middle_point, 1.0], Dim4::new(&[1, NUM_CANDIDATES, 1, 1]));
-                    if LOGLEVEL >= TRACE { af_print!("honest: ", my_ballot); }
-                    //calculate utility total of honest strat
-                    &get_win_counts(my_ballot, normalized_a1a2)
-                };
+                let win_count = &win_counts[j];
                 if LOGLEVEL >= TRACE { af_print!("win_count: ", win_count); }
                 let utility_total = get_utility_total(win_count, &Array::new(&[0.0, honest_point, 1.0], Dim4::new(&[1, NUM_CANDIDATES, 1, 1])));
                 println!("Honest middle: {}|Percent of possible utility for {} strat: {}", honest_point, middle_point, utility_total as f64 / (SCENARIOS as f64));
             }
         }
-
-        println!("found in: {:?}", start.elapsed());
     }
 
+    println!("found in: {:?}", start.elapsed());
     mem_info!("After benchmark");
 }
 
@@ -77,7 +85,16 @@ fn get_utility_total(win_counts: &Array, utilities: &Array) -> f64 {
     util
 }
 
-fn get_win_counts(utilities: &Array, near_total: &Array) -> Array {
+/// protagonist will vote using (0, middle_point, 1) in each scenario, then we return an array which tallies the wins of each candidate.
+/// near_total represents the ballot totals minus the protagonists ballot, all that remains is to add in the normalized ballot of protagonist.
+fn get_win_count_using_middle(middle_point: f64, near_total: &Array) -> Array {
+    let my_ballot = &Array::new(&[0.0, middle_point, 1.0], Dim4::new(&[1, NUM_CANDIDATES, 1, 1]));
+    if LOGLEVEL >= TRACE { af_print!("honest: ", my_ballot); }
+    //calculate utility total of honest strat
+    get_win_count(my_ballot, near_total)
+}
+
+fn get_win_count(utilities: &Array, near_total: &Array) -> Array {
     let normalized_honest = &normalize_ballot(utilities);
     if LOGLEVEL >= TRACE { af_print!("honest normalized: ", normalized_honest); }
     let result = &add(near_total, normalized_honest, true);
