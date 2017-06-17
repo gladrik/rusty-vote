@@ -54,15 +54,11 @@ fn main() {
 
         // pretabulate and store win_counts for each middle point so we only calc once per each
         let mut win_counts : Vec<Array> = Vec::new();
-        for i in 0..middle_points.len() {
-            let &middle_point = &middle_points[i];
-            win_counts.push(get_win_count_using_middle(middle_point, normalized_a1a2))
-        }
+        for middle_point in middle_points { win_counts.push(get_win_count_using_middle(middle_point, normalized_a1a2)) }
 
         for i in 0..middle_points.len() {
             for j in 0..middle_points.len() {
                 let &honest_point = &middle_points[i];
-                let &middle_point = &middle_points[j];
 
                 // protagonist's info
                 let win_count = &win_counts[j];
