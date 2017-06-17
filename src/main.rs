@@ -5,15 +5,17 @@ use std::collections::HashMap;
 use std::time::Instant;
 use af::*;
 
-static NUM_CANDIDATES: u64 = 3;
-static SCENARIOS: u64 = 500_000;
+const NUM_CANDIDATES: u64 = 3;
+const ADVERSARIES: u64 = 2;
+const MIDDLE_SAMPLES: u64 = 11;
+const SCENARIOS: u64 = 500_000;
 
-static ERROR: u64 = 1;
-static WARN: u64 = 2;
-static INFO: u64 = 3;
-static DEBUG: u64 = 4;
-static TRACE: u64 = 5;
-static LOGLEVEL: u64 = 3;
+const ERROR: u64 = 1;
+const WARN: u64 = 2;
+const INFO: u64 = 3;
+const DEBUG: u64 = 4;
+const TRACE: u64 = 5;
+const LOGLEVEL: u64 = 3;
 
 #[allow(unused_must_use)]
 #[allow(unused_variables)]
@@ -47,8 +49,8 @@ fn main() {
     let start = Instant::now();
 
     mem_info!("Before benchmark");
-    {
-        let middle_points = (0..11).map(|x| x as f64/10.0).collect::<Vec<_>>(); //vec![0.0, 0.25, 0.5, 0.75, 1.0];
+    let utility_matrix = {
+        let middle_points = (0..MIDDLE_SAMPLES).map(|x| x as f64/((MIDDLE_SAMPLES-1) as f64)).collect::<Vec<_>>();
         /* TODO parameter num adversaries */
         let normalized_a1a2 = &get_adversary_ballots_combined(); if LOGLEVEL >= DEBUG {af_print!("a1 + a2 normalized:", normalized_a1a2);}
 
@@ -59,6 +61,7 @@ fn main() {
             win_counts.push(get_win_count_using_middle(middle_point, normalized_a1a2))
         }
 
+        let mut utility_matrix = [[0.0; MIDDLE_SAMPLES as usize]; MIDDLE_SAMPLES as usize];
         for i in 0..middle_points.len() {
             for j in 0..middle_points.len() {
                 let &honest_point = &middle_points[i];
@@ -68,10 +71,15 @@ fn main() {
                 let win_count = &win_counts[j];
                 if LOGLEVEL >= TRACE { af_print!("win_count: ", win_count); }
                 let utility_total = get_utility_total(win_count, &Array::new(&[0.0, honest_point, 1.0], Dim4::new(&[1, NUM_CANDIDATES, 1, 1])));
-                println!("Honest middle: {}|Percent of possible utility for {} strat: {}", honest_point, middle_point, utility_total as f64 / (SCENARIOS as f64));
+                let utility_percent = utility_total as f64 / (SCENARIOS as f64);
+                utility_matrix[i][j] = utility_percent;
+                println!("Honest middle: {}|Percent of possible utility for {} strat: {}", honest_point, middle_point, utility_percent);
             }
         }
-    }
+        utility_matrix
+    };
+
+    println!("utility matrix: {:?}", utility_matrix);
 
     println!("found in: {:?}", start.elapsed());
     mem_info!("After benchmark");
