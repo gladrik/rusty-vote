@@ -7,7 +7,7 @@ use af::*;
 
 const NUM_CANDIDATES: u64 = 3;
 const ADVERSARIES: u64 = 2;
-const MIDDLE_SAMPLES: u64 = 21;
+const MIDDLE_SAMPLES: u64 = 11;
 const SCENARIOS: u64 = 500_000;
 
 const ERROR: u64 = 1;
@@ -42,10 +42,13 @@ fn main() {
 
     //222172629 10^2 win_points^2 (not pretab), 500_000 sc
     // with win_points pretabulated:
-    // 73593116 10 sample,1_000_000 scenarios
-    // 57679105 10 sample,  500_000 scenarios
-    // 46587156 10 sample,  100_000 scenarios
+    // 73593116 11 sample,1_000_000 scenarios
+    // 57679105 11 sample,  500_000 scenarios
+    // 46587156 11 sample,  100_000 scenarios
     // 38447700  6 sample,  500_000 scenarios
+    // 55659704 11 sample,  500_000 scenarios
+    // with custom deviation:
+    //175588158 11 sample, 500_000 scenarios
 
     let start = Instant::now();
 
@@ -129,25 +132,28 @@ fn get_adversary_ballots_combined() -> Array {
 }
 
 /// simple stddev normalize
-//fn normalize_ballot(input: &Array) -> Array {
-//    let a1_stdev = &stdev(input, 1);
-//    //af_print!("a1_stdev:", a1_stdev);
-//    mem_info!("end normalize");
-//    div(input, a1_stdev, true)
-//}
+fn normalize_ballot_s(input: &Array) -> Array {
+    let a1_stdev = &stdev(input, 1);
+    //af_print!("a1_stdev:", a1_stdev);
+    mem_info!("end normalize");
+    div(input, a1_stdev, true)
+}
 
 /// this normalize will be dynamic based on parameters
 fn normalize_ballot(input: &Array) -> Array {
+    //af_print!("input :", input);
     let mean1 = &mean(input, 1);
-    println!("1");
-    //af_print!("mean:", mean1);
+    //af_print!("mean1:", mean1);
     let subbed = &sub(input, mean1, true);
-    println!("2");
+    //af_print!("subbed: ", subbed);
     let powed = &pow(subbed, &Array::new(&[2.0], Dim4::new(&[1, 1, 1, 1])), true);
-    println!("3");
+    //af_print!("powed: ", powed);
     let mean2 = &mean(powed, 1);
-    println!("4");
-    let retval = pow(mean2, &Array::new(&[1.0/2.0], Dim4::new(&[1, 1, 1, 1])), true);
-    mem_info!("end normalize");
+    //af_print!("mean2: ", mean2);
+    let dev = &pow(mean2, &Array::new(&[1.0/2.0], Dim4::new(&[1, 1, 1, 1])), true);
+    //af_print!("dev: ", mean2);
+    let retval = div(input, dev, true);
+
+    //mem_info!("end normalize");
     retval
 }
