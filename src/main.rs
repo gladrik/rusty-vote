@@ -7,7 +7,7 @@ use af::*;
 
 const NUM_CANDIDATES: u64 = 3;
 const ADVERSARIES: u64 = 2;
-const MIDDLE_SAMPLES: u64 = 11;
+const MIDDLE_SAMPLES: u64 = 21;
 const SCENARIOS: u64 = 500_000;
 
 const ERROR: u64 = 1;
@@ -45,6 +45,7 @@ fn main() {
     // 73593116 10 sample,1_000_000 scenarios
     // 57679105 10 sample,  500_000 scenarios
     // 46587156 10 sample,  100_000 scenarios
+    // 38447700  6 sample,  500_000 scenarios
 
     let start = Instant::now();
 
@@ -127,8 +128,26 @@ fn get_adversary_ballots_combined() -> Array {
     add(normalized_a1, normalized_a2, false)
 }
 
+/// simple stddev normalize
+//fn normalize_ballot(input: &Array) -> Array {
+//    let a1_stdev = &stdev(input, 1);
+//    //af_print!("a1_stdev:", a1_stdev);
+//    mem_info!("end normalize");
+//    div(input, a1_stdev, true)
+//}
+
+/// this normalize will be dynamic based on parameters
 fn normalize_ballot(input: &Array) -> Array {
-    let a1_stdev = &stdev(input, 1);
-    //af_print!("a1_stdev:", a1_stdev);
-    div(input, a1_stdev, true)
+    let mean1 = &mean(input, 1);
+    println!("1");
+    //af_print!("mean:", mean1);
+    let subbed = &sub(input, mean1, true);
+    println!("2");
+    let powed = &pow(subbed, &Array::new(&[2.0], Dim4::new(&[1, 1, 1, 1])), true);
+    println!("3");
+    let mean2 = &mean(powed, 1);
+    println!("4");
+    let retval = pow(mean2, &Array::new(&[1.0/2.0], Dim4::new(&[1, 1, 1, 1])), true);
+    mem_info!("end normalize");
+    retval
 }
