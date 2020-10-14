@@ -3,9 +3,6 @@
   <component name="ProjectRootManager">
     <output url="file://$PROJECT_DIR$/out" />
   </component>
-  <component name="RustProjectSettings">
-    <option name="toolchainHomeDirectory" value="C:\Users\Muhd\.cargo\bin" />
-  </component>
   <component name="masterDetails">
     <states>
       <state key="ProjectJDKs.UI">
